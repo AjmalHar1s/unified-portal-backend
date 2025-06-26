@@ -9,29 +9,37 @@ import applicationRoutes from './routes/applicationRoutes.js';
 dotenv.config();
 const app = express();
 
-// ✅ CORS Setup (Allow only your Netlify site, or all origins)
+// ✅ Step 1: Configure CORS correctly
+const allowedOrigins = ['https://sparkcareer-unified-portal.netlify.app'];
+
 app.use(cors({
-  origin: "https://sparkcareer-unified-portal.netlify.app",  // ✅ your frontend Netlify domain
-  credentials: true, // optional, if you're using cookies or auth tokens
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true,
 }));
 
+// ✅ Step 2: Parse JSON
 app.use(express.json());
 
-// ✅ Routes
+// ✅ Step 3: Routes
 app.use("/api/auth", authRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/applications', applicationRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
 
-// ✅ Root Route for testing
+// ✅ Step 4: Health Check
 app.get("/", (req, res) => {
   res.send("🔥 Backend is running...");
 });
 
-// ✅ Start server after DB connects
+// ✅ Step 5: Start Server
 connectDB().then(() => {
   app.listen(process.env.PORT || 5000, () => {
-    console.log(
-      `🚀 Server running on http://localhost:${process.env.PORT || 5000}`
-    );
+    console.log(`🚀 Server running on http://localhost:${process.env.PORT || 5000}`);
   });
 });
